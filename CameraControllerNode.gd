@@ -32,16 +32,16 @@ var movementKeys : Array[Key] = [KEY_W, KEY_S, KEY_A, KEY_D]
 var keysPressed : Array = []
 
 func _ready() -> void:
+	l = LogControl.new(log_name, log_level).logging
 	# setup
-	l = LogControl.new(log_name, log_level)
 	camera_rotation_angle = $Camera3D.rotation.y 
 
-## MOVE CAMERA whenever direction is != 0
+## Only process if direction not 0
 func _process(delta: float):
 	if camera and direction != Vector3.ZERO:
 		move_camera(delta)
 
-# Normalize direction and move the camera
+## Normalize direction and move the camera
 func move_camera(delta : float)  -> void:
 	var velocity = direction.normalized() * mov_speed * delta
 	camera.global_position += velocity * speed_modifier
@@ -66,52 +66,38 @@ func _input(event: InputEvent) -> void:
 		if movementKeys.filter(func(m): return m == event.keycode).size() > 0:
 			treat_movement_key(event)
 
-# applies the correct direction considering camera rotation
+## Applies the correct direction considering camera rotation
 func apply_direction_force(straight_vector : Vector3, release : bool):
+	# Rotate directional vector (straight_vector) according to camera
 	var rotatedAxis = straight_vector.rotated(Vector3.UP, $Camera3D.rotation.y)
 	if release:
+		# Keep other axis 'forces', but remove the released "force"/direction
 		direction -= rotatedAxis * direction.dot(rotatedAxis)
 	else:
+		# Apply directional force already rotated
 		direction += rotatedAxis
 	return direction
 
-# Handle camera movement input (WASD)
+## Handle camera movement input (WASD)
 func handle_movement(event: InputEvent, released = false):
 	# Handle movement keys
 	if event.keycode == KEY_W:
 		# "STRAIGHT" UP "FORCE"
-		direction = apply_direction_force(Vector3(0, 0, -1), released)
-		
-		var rotatedZAxis = Vector3(0, 0, -1).rotated(Vector3.UP, $Camera3D.rotation.y)
-		if not released:
-			direction += rotatedZAxis
-		else:
-			direction -= rotatedZAxis * direction.dot(rotatedZAxis)
+		var forward_vector = Vector3(0, 0, -1)
+		apply_direction_force(forward_vector, released)
+
 	elif event.keycode == KEY_S:
-		# "STRAIGHT" DOWN "FORCE"
-		var rotatedZAxis = Vector3(0, 0, 1).rotated(Vector3.UP, $Camera3D.rotation.y)
-		if not released:
-			direction += rotatedZAxis
-		else:
-			direction -= rotatedZAxis * direction.dot(rotatedZAxis)
+		var backwards_vector = Vector3(0, 0, 1)
+		apply_direction_force(backwards_vector, released)
 	elif event.keycode == KEY_A:
 		# "STRAIGHT" LEFT "FORCE"
-		var rotatedXAxis = Vector3(-1, 0, 0).rotated(Vector3.UP, $Camera3D.rotation.y)
-		if not released:
-			direction += rotatedXAxis
-		else:
-			direction -= rotatedXAxis * direction.dot(rotatedXAxis)
+		var left_vector = Vector3(-1, 0, 0)
+		apply_direction_force(left_vector, released)
 	elif event.keycode == KEY_D:
 		# "STRAIGHT" RIGHT 'FORCE'
 		var right_vector = Vector3(1, 0, 0)
-		# "ROTATED" RIGHT - ACCORDING TO CAMERA ORIENTATION
-		var rotatedXAxis = right_vector.rotated(Vector3.UP, $Camera3D.rotation.y)
-		if not released:
-			# APPLY ROTATED 'RIGHT FORCE'
-			direction += rotatedXAxis
-		else:
-			# Keep other axis values, but remove the 'RIGHT FORCE'
-			direction -= rotatedXAxis * direction.dot(rotatedXAxis)
+		apply_direction_force(right_vector, released)
+		
 
 ## Track the movement keys (keysPressed)
 func treat_movement_key(event : InputEventKey):

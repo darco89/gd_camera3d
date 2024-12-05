@@ -1,7 +1,8 @@
 # gd_camera3d
 Basic "WASD Camera" for a GODOT Camera3D controller
 
-Settings example
+It also includes basic zoom in and out
+The camera will rotate with your mouse, if you hold Z
 
 
 # Setting for camera
