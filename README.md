@@ -1,2 +1,2 @@
 # gd_camera3d
-basic 3D WASD Camera
+Basic "WASD Camera" for a GODOT Camera3D controller
